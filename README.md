@@ -1,11 +1,11 @@
-# Adrobot — Keitaro campaign helper
+# Adrobot — помощник для кампаний Keitaro
 
-FastAPI + SQLAlchemy helper for [Keitaro](https://docs.keitaro.io/en/development/admin-api.html), with a **Vue 3** UI:
+Помощник на FastAPI + SQLAlchemy для [Keitaro](https://docs.keitaro.io/en/development/admin-api.html) с UI на **Vue 3**:
 
-1. **Campaign creator** — name + geo ISO code + offer ID → campaign with 2 streams (geo → Google, fallback → offer), with domain / group / traffic source from API.
-2. **Campaign editor** — fetch streams, add/remove/bring-back offers, pin weights, push/cancel unpublished changes (logic from the TZ video).
+1. **Создание кампаний** — название + ISO-код гео + ID оффера → кампания с 2 потоками (гео → Google, запасной → оффер); домен / группа / источник трафика берутся из API.
+2. **Редактор кампаний** — загрузка потоков, добавление/удаление/возврат офферов, закрепление весов, публикация/отмена неопубликованных изменений (логика из видео к ТЗ).
 
-## Setup
+## Установка
 
 ```bash
 py -3.12 -m venv .venv
@@ -14,15 +14,15 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
-Requires Python 3.10+ (developed on 3.12). Edit `.env` and set `KEITARO_URL` and `KEITARO_API_KEY`
-(Account → API keys in Keitaro admin: https://tlgk.host/admin). `ADROBOT_API_TOKEN` and `DATABASE_URL`
-are optional (see [Configuration](#configuration-env)).
+Требуется Python 3.10+ (разработка велась на 3.12). Отредактируйте `.env` и задайте `KEITARO_URL` и `KEITARO_API_KEY`
+(Account → API keys в админке Keitaro: https://tlgk.host/admin). `ADROBOT_API_TOKEN` и `DATABASE_URL`
+необязательны (см. [Конфигурация](#конфигурация-env)).
 
-Run every backend command (`uvicorn`, `pytest`) **from the repo root**: `.env` and the default
-SQLite path `./data/adrobot.db` are resolved relative to the current working directory.
-The backend start command is in [Run](#run).
+Все команды бэкенда (`uvicorn`, `pytest`) запускайте **из корня репозитория**: `.env` и путь SQLite по умолчанию
+`./data/adrobot.db` определяются относительно текущей рабочей директории.
+Команда запуска бэкенда приведена в разделе [Запуск](#запуск).
 
-Frontend (Vue 3 + TypeScript + Vite; Node.js 20.19+ or 22.12+ required by Vite 8):
+Фронтенд (Vue 3 + TypeScript + Vite; для Vite 8 нужен Node.js 20.19+ или 22.12+):
 
 ```bash
 cd frontend
@@ -31,62 +31,62 @@ npm run typecheck   # vue-tsc (strict) — also runs as part of npm run build
 npm run build       # typecheck + vite build → frontend/dist (served by FastAPI at /)
 ```
 
-Optional API token: if the backend is configured with a token, the UI sends it as
-`Authorization: Bearer <token>`. Either paste it in the UI (**Settings** button in the header;
-stored in the browser's localStorage) or bake it in at build time with
-`VITE_ADROBOT_API_TOKEN=<token>` (e.g. in `frontend/.env.local`; requires rebuild — note it is then
-embedded in the public JS bundle). A token saved in the UI wins.
-The header name/format lives in one place: `frontend/src/api.ts`.
+Необязательный API token: если бэкенд настроен с токеном, UI отправляет его как
+`Authorization: Bearer <token>`. Токен можно вставить в UI (кнопка **Настройки** в шапке;
+хранится в localStorage браузера) или зашить при сборке через
+`VITE_ADROBOT_API_TOKEN=<token>` (например, в `frontend/.env.local`; требуется пересборка — учтите, что тогда он
+попадает в публичный JS-бандл). Токен, сохранённый в UI, имеет приоритет.
+Имя и формат заголовка определены в одном месте: `frontend/src/api.ts`.
 
-Defaults used for FORTESTS sandbox (overridable in UI / `.env`):
+Значения по умолчанию для песочницы FORTESTS (можно переопределить в UI / `.env`):
 
-| Setting | Value |
-|---------|-------|
-| Domain | `1813` (`kylovoa.com`) |
-| Group | `10332` (`FORTESTS`) |
-| Traffic source | `836` (`FORTESTS`) |
-| Name prefix | `test_timovey_` |
+| Настройка | Значение |
+|-----------|----------|
+| Домен | `1813` (`kylovoa.com`) |
+| Группа | `10332` (`FORTESTS`) |
+| Источник трафика | `836` (`FORTESTS`) |
+| Префикс названия | `test_timovey_` |
 
-### Configuration (`.env`)
+### Конфигурация (`.env`)
 
-| Variable | Default | Notes |
-|----------|---------|-------|
-| `KEITARO_URL` / `KEITARO_API_KEY` | — | Keitaro Admin API; the key never leaves the server and is never logged |
-| `KEITARO_TIMEOUT_SECONDS` | `60` | Per-request timeout to Keitaro |
-| `ADROBOT_API_TOKEN` | empty (auth off) | When set, see [Authentication](#authentication) |
-| `DATABASE_URL` | `sqlite:///./data/adrobot.db` | Any SQLAlchemy URL (see [Database](#database)) |
-| `LOG_LEVEL` | `INFO` | `DEBUG` logs every Keitaro call (method, path, status, duration) |
-| `DEFAULT_DOMAIN_ID` / `DEFAULT_GROUP_ID` / `DEFAULT_TRAFFIC_SOURCE_ID` | unset in code; `.env.example` sets the FORTESTS values | Pre-selected defaults for the campaign creator |
-| `CAMPAIGN_NAME_PREFIX` | `test_timovey_` | Prefix for created campaign names |
-| `GOOGLE_REDIRECT_URL` | `https://www.google.com/` | Redirect target of the geo → Google stream |
+| Переменная | По умолчанию | Примечания |
+|------------|--------------|------------|
+| `KEITARO_URL` / `KEITARO_API_KEY` | — | Keitaro Admin API; ключ никогда не покидает сервер и не попадает в логи |
+| `KEITARO_TIMEOUT_SECONDS` | `60` | Таймаут на один запрос к Keitaro |
+| `ADROBOT_API_TOKEN` | пусто (авторизация выключена) | Если задан, см. [Аутентификация](#аутентификация) |
+| `DATABASE_URL` | `sqlite:///./data/adrobot.db` | Любой URL SQLAlchemy (см. [База данных](#база-данных)) |
+| `LOG_LEVEL` | `INFO` | `DEBUG` логирует каждый вызов Keitaro (метод, путь, статус, длительность) |
+| `DEFAULT_DOMAIN_ID` / `DEFAULT_GROUP_ID` / `DEFAULT_TRAFFIC_SOURCE_ID` | не заданы в коде; `.env.example` задаёт значения FORTESTS | Предвыбранные значения по умолчанию для создания кампаний |
+| `CAMPAIGN_NAME_PREFIX` | `test_timovey_` | Префикс названий создаваемых кампаний |
+| `GOOGLE_REDIRECT_URL` | `https://www.google.com/` | Адрес редиректа потока гео → Google |
 
-`KEITARO_URL` defaults to `https://tlgk.host` and `KEITARO_API_KEY` to empty; without a key every
-route that talks to Keitaro returns 500 `KEITARO_API_KEY is not set in .env`.
-Settings are read once at startup — restart uvicorn after editing `.env`.
+`KEITARO_URL` по умолчанию равен `https://tlgk.host`, а `KEITARO_API_KEY` — пустой; без ключа каждый
+маршрут, обращающийся к Keitaro, возвращает 500 `KEITARO_API_KEY is not set in .env`.
+Настройки читаются один раз при старте — перезапустите uvicorn после правки `.env`.
 
-### Authentication
+### Аутентификация
 
-The API holds a live Keitaro key, so it binds to `127.0.0.1` by default. To protect it further
-(or before exposing it beyond localhost), set a token in `.env`:
+API хранит рабочий ключ Keitaro, поэтому по умолчанию привязывается к `127.0.0.1`. Чтобы защитить его дополнительно
+(или перед тем, как открывать за пределы localhost), задайте токен в `.env`:
 
 ```
 ADROBOT_API_TOKEN=some-long-random-string
 ```
 
-When set, every `/api/*` route except `GET /api/health` requires **one** of:
+Если токен задан, каждый маршрут `/api/*`, кроме `GET /api/health`, требует **один** из вариантов:
 
 - `Authorization: Bearer <token>`
 - `X-API-Key: <token>`
 
-Missing/wrong token → `401 {"detail": "Missing or invalid API token"}` with `WWW-Authenticate: Bearer`.
-`GET /api/health` stays public and reports `"auth_required": true|false` so the UI can prompt for a token.
-The SPA (`/`, `/assets`) is not protected.
+Отсутствующий/неверный токен → `401 {"detail": "Missing or invalid API token"}` с заголовком `WWW-Authenticate: Bearer`.
+`GET /api/health` остаётся публичным и возвращает `"auth_required": true|false`, чтобы UI мог запросить токен.
+SPA (`/`, `/assets`) не защищено.
 
-### Database
+### База данных
 
-The local DB is only a mirror of Keitaro plus unpublished drafts. SQLite is the default;
-Postgres works too via `DATABASE_URL` (the driver `psycopg` is **optional** and not in
-`requirements.txt`; install it only if you switch):
+Локальная БД — лишь зеркало Keitaro плюс неопубликованные черновики. По умолчанию используется SQLite;
+Postgres тоже работает через `DATABASE_URL` (драйвер `psycopg` **необязателен** и не входит в
+`requirements.txt`; устанавливайте его, только если переключаетесь):
 
 ```bash
 pip install "psycopg[binary]"
@@ -94,36 +94,36 @@ pip install "psycopg[binary]"
 DATABASE_URL=postgresql+psycopg://user:pass@localhost:5432/adrobot
 ```
 
-- **Location (SQLite):** `data/adrobot.db` relative to the directory uvicorn is started from
-  (start it from the repo root). The `data/` folder is created automatically; `*.db` is git-ignored.
-- **Tables:** created automatically on every startup (`init_db()` in the FastAPI lifespan).
-- **Migrations:** **Alembic is not used and there is no manual migration step.** The only migration
-  is a tiny built-in one in `app/database.py` that runs at startup, before table creation: if
-  `streams` has a `schema` column and no `stream_schema` column, it runs
-  `ALTER TABLE streams RENAME COLUMN "schema" TO stream_schema` once (idempotent; works on SQLite
-  and Postgres). Just upgrade the code and restart.
-- **Limits:** `create_all` only creates *missing tables*; it never adds columns to existing ones. Any
-  future model change other than the rename above needs a new hand-written step in `_migrate()`
-  or a fresh database.
-- **Resetting:** the DB is only a local mirror of Keitaro plus unpublished drafts, so deleting
-  `data/adrobot.db` (with the server stopped) is safe — campaigns are re-mirrored from Keitaro via
-  *Fetch streams*. Only unpublished local drafts are lost.
+- **Расположение (SQLite):** `data/adrobot.db` относительно директории, из которой запущен uvicorn
+  (запускайте из корня репозитория). Папка `data/` создаётся автоматически; `*.db` находится в git-ignore.
+- **Таблицы:** создаются автоматически при каждом запуске (`init_db()` в lifespan FastAPI).
+- **Миграции:** **Alembic не используется, ручного шага миграции нет.** Единственная миграция —
+  крошечная встроенная в `app/database.py`, выполняется при старте до создания таблиц: если
+  в `streams` есть колонка `schema` и нет колонки `stream_schema`, один раз выполняется
+  `ALTER TABLE streams RENAME COLUMN "schema" TO stream_schema` (идемпотентно; работает в SQLite
+  и Postgres). Просто обновите код и перезапустите.
+- **Ограничения:** `create_all` создаёт только *отсутствующие таблицы*; он никогда не добавляет колонки в существующие. Любое
+  будущее изменение моделей, кроме переименования выше, потребует нового ручного шага в `_migrate()`
+  или новой базы данных.
+- **Сброс:** БД — лишь локальное зеркало Keitaro плюс неопубликованные черновики, поэтому удаление
+  `data/adrobot.db` (при остановленном сервере) безопасно — кампании заново отзеркалируются из Keitaro через
+  *Загрузить потоки*. Теряются только неопубликованные локальные черновики.
 
-Note: `pytest` never touches your real database. `tests/conftest.py` points `DATABASE_URL` at a
-throwaway temp SQLite file (deleted after the run) before the app is imported, so the app lifespan's
-`init_db()` runs against that file, and aborts if the engine is not the test DB. This also applies to live tests.
+Примечание: `pytest` никогда не трогает вашу реальную базу данных. `tests/conftest.py` направляет `DATABASE_URL` на
+временный одноразовый файл SQLite (удаляется после прогона) до импорта приложения, поэтому `init_db()` в lifespan приложения
+работает с этим файлом и прерывает работу, если engine — не тестовая БД. Это относится и к live-тестам.
 
-### Logging
+### Логирование
 
-App logs go to the `adrobot.*` loggers (stderr when nothing else is configured): campaign create /
-push / fetch / cancel, upstream errors, and **ORPHANED** errors with Keitaro campaign/stream IDs
-if a failed create could not be rolled back remotely.
+Логи приложения пишутся в логгеры `adrobot.*` (в stderr, если ничего другого не настроено): создание / публикация /
+загрузка / отмена кампаний, ошибки upstream и ошибки **ORPHANED** с ID кампании/потока Keitaro,
+если неудавшееся создание не удалось откатить на стороне Keitaro.
 
-## Run
+## Запуск
 
-### Production-style (UI served by FastAPI)
+### В стиле production (UI отдаёт FastAPI)
 
-Build the Vue app (`npm run build` type-checks with `vue-tsc` first, then runs `vite build`), then start uvicorn. FastAPI serves `frontend/dist` at `/` and `/assets`.
+Соберите Vue-приложение (`npm run build` сначала проверяет типы через `vue-tsc`, затем запускает `vite build`), затем запустите uvicorn. FastAPI отдаёт `frontend/dist` по адресам `/` и `/assets`.
 
 ```bash
 cd frontend
@@ -133,25 +133,25 @@ cd ..
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Open http://127.0.0.1:8000
+Откройте http://127.0.0.1:8000
 
-If the UI was not built yet, `/` returns HTTP 503 with build instructions (`/api/*` still works, and
-`/favicon.svg` returns 404). `/assets` is only mounted if `frontend/dist/assets` exists when uvicorn starts, so after
-the first `npm run build` restart uvicorn once (later rebuilds are picked up without a restart).
-`--reload` only watches Python files; drop it for a non-development run.
+Если UI ещё не собран, `/` возвращает HTTP 503 с инструкцией по сборке (`/api/*` при этом работает, а
+`/favicon.svg` возвращает 404). `/assets` монтируется, только если `frontend/dist/assets` существует на момент запуска uvicorn, поэтому после
+первого `npm run build` один раз перезапустите uvicorn (последующие пересборки подхватываются без перезапуска).
+`--reload` отслеживает только Python-файлы; для запуска не в режиме разработки уберите его.
 
-### Dev (Vite + API proxy)
+### Разработка (Vite + прокси к API)
 
-Run API and Vite separately. Vite proxies `/api` → `http://127.0.0.1:8000`.
+Запускайте API и Vite отдельно. Vite проксирует `/api` → `http://127.0.0.1:8000`.
 
-Terminal 1 — backend:
+Терминал 1 — бэкенд:
 
 ```bash
 .\.venv\Scripts\activate
 uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Terminal 2 — frontend:
+Терминал 2 — фронтенд:
 
 ```bash
 cd frontend
@@ -159,33 +159,33 @@ npm install   # first time only
 npm run dev
 ```
 
-The proxy target (`http://127.0.0.1:8000`) is set in `frontend/vite.config.ts`; change it there if the API runs on another port.
-If `ADROBOT_API_TOKEN` is set on the backend, paste it via **Settings** in the UI (or set `VITE_ADROBOT_API_TOKEN` in `frontend/.env.local` and restart `npm run dev`).
+Адрес прокси (`http://127.0.0.1:8000`) задан в `frontend/vite.config.ts`; измените его там, если API работает на другом порту.
+Если на бэкенде задан `ADROBOT_API_TOKEN`, вставьте его через **Настройки** в UI (или задайте `VITE_ADROBOT_API_TOKEN` в `frontend/.env.local` и перезапустите `npm run dev`).
 
-Open http://127.0.0.1:5173
+Откройте http://127.0.0.1:5173
 
-## API (main)
+## API (основное)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/campaigns` | Create campaign (2 streams) |
-| GET | `/api/campaigns` | Local campaigns |
-| GET | `/api/campaigns/{keitaro_id}` | Campaign detail |
-| POST | `/api/campaigns/{keitaro_id}/fetch-streams` | Sync streams from Keitaro |
-| POST | `/api/streams/{local_stream_id}/offers` | Add offer (recalculate shares) |
-| DELETE | `/api/streams/{local_stream_id}/offers/{offer_id}` | Soft-remove offer |
-| POST | `/api/streams/{local_stream_id}/offers/{offer_id}/bring-back` | Restore removed offer |
-| POST | `/api/streams/{local_stream_id}/offers/{offer_id}/pin` | Pin/unpin weight |
-| POST | `/api/streams/{local_stream_id}/push` | Publish offers to Keitaro |
-| POST | `/api/streams/{local_stream_id}/cancel` | Discard draft changes |
+| Метод | Путь | Описание |
+|-------|------|----------|
+| POST | `/api/campaigns` | Создать кампанию (2 потока) |
+| GET | `/api/campaigns` | Локальные кампании |
+| GET | `/api/campaigns/{keitaro_id}` | Детали кампании |
+| POST | `/api/campaigns/{keitaro_id}/fetch-streams` | Синхронизировать потоки из Keitaro |
+| POST | `/api/streams/{local_stream_id}/offers` | Добавить оффер (пересчитать доли) |
+| DELETE | `/api/streams/{local_stream_id}/offers/{offer_id}` | Мягко удалить оффер |
+| POST | `/api/streams/{local_stream_id}/offers/{offer_id}/bring-back` | Восстановить удалённый оффер |
+| POST | `/api/streams/{local_stream_id}/offers/{offer_id}/pin` | Закрепить/открепить вес |
+| POST | `/api/streams/{local_stream_id}/push` | Опубликовать офферы в Keitaro |
+| POST | `/api/streams/{local_stream_id}/cancel` | Отбросить изменения черновика |
 
-Errors are JSON `{"detail": "..."}`. Local errors (unknown stream/offer, invalid input) use
-400/404; Keitaro errors pass through 400/404, while Keitaro 401/403/5xx and network errors or
-timeouts become **502**.
+Ошибки возвращаются как JSON `{"detail": "..."}`. Локальные ошибки (неизвестный поток/оффер, неверный ввод) используют
+400/404; ошибки Keitaro 400/404 пробрасываются как есть, а Keitaro 401/403/5xx, сетевые ошибки и
+таймауты превращаются в **502**.
 
-## Tests
+## Тесты
 
-Install deps (includes pytest), then from the repo root with the venv active:
+Установите зависимости (включая pytest), затем из корня репозитория с активным venv:
 
 ```bash
 # Unit + mocked API tests only (default; skips live Keitaro)
@@ -200,21 +200,21 @@ $env:RUN_LIVE_TESTS="1"; pytest -m live
 $env:RUN_LIVE_TESTS="1"; pytest
 ```
 
-The commands above are PowerShell. In cmd use `set RUN_LIVE_TESTS=1` and in bash `RUN_LIVE_TESTS=1 pytest -m live`.
-Without `RUN_LIVE_TESTS=1`, live tests are skipped even with `-m live`.
+Команды выше — для PowerShell. В cmd используйте `set RUN_LIVE_TESTS=1`, а в bash — `RUN_LIVE_TESTS=1 pytest -m live`.
+Без `RUN_LIVE_TESTS=1` live-тесты пропускаются, даже с `-m live`.
 
-Live tests archive (soft-delete) every campaign they create and print the IDs and cleanup state
-at the end of the run. The multi-offer editor flow is skipped if Keitaro has fewer than 2 active offers.
-Unit tests ignore `.env` (including `ADROBOT_API_TOKEN`); live tests send the token if it is set.
+Live-тесты архивируют (мягко удаляют) каждую созданную ими кампанию и в конце прогона выводят ID и состояние очистки.
+Сценарий редактора с несколькими офферами пропускается, если в Keitaro меньше 2 активных офферов.
+Unit-тесты игнорируют `.env` (включая `ADROBOT_API_TOKEN`); live-тесты отправляют токен, если он задан.
 
-| Suite | Path | Network |
-|-------|------|---------|
-| Weight / naming unit tests | `tests/test_weights.py`, `tests/test_naming.py` | none |
-| FastAPI TestClient + fake Keitaro | `tests/test_api.py`, `tests/test_sync.py`, `tests/test_create_compensation.py` | none |
-| Error mapping, auth, DB migration | `tests/test_errors_auth.py`, `tests/test_database.py` | none |
-| Live create / sync / compensation | `tests/test_live_keitaro.py` (`@pytest.mark.live`) | real Keitaro |
+| Набор | Путь | Сеть |
+|-------|------|------|
+| Unit-тесты весов / именования | `tests/test_weights.py`, `tests/test_naming.py` | нет |
+| FastAPI TestClient + фейковый Keitaro | `tests/test_api.py`, `tests/test_sync.py`, `tests/test_create_compensation.py` | нет |
+| Маппинг ошибок, авторизация, миграция БД | `tests/test_errors_auth.py`, `tests/test_database.py` | нет |
+| Live: создание / синхронизация / компенсация | `tests/test_live_keitaro.py` (`@pytest.mark.live`) | реальный Keitaro |
 
-## Project layout
+## Структура проекта
 
 ```
 app/
@@ -238,31 +238,31 @@ frontend/              # Vue 3 + TypeScript + Vite SPA
 data/                  # SQLite DB (created at runtime)
 ```
 
-## Creator stream rules
+## Правила потоков при создании
 
-1. **Geo → Google** — `type=regular`, `schema=redirect`, country filter `accept` for given ISO code, HTTP redirect to Google.
-2. **Offers** — `type=default`, `schema=landings`, selected offer at 100% share.
+1. **Гео → Google** — `type=regular`, `schema=redirect`, фильтр по стране `accept` для заданного ISO-кода, HTTP-редирект на Google.
+2. **Офферы** — `type=default`, `schema=landings`, выбранный оффер с долей 100%.
 
-Creation validates input (geo, offer, defaults) first, then creates the campaign and both streams
-in Keitaro, then saves locally. If any step fails, created streams are deleted and the campaign is
-archived (or disabled as fallback); if that also fails the leftover IDs are logged as `ORPHANED`.
-If Keitaro drops the connection without answering the create call, the campaign is looked up by
-its unique alias and rolled back too.
+Создание сначала проверяет ввод (гео, оффер, значения по умолчанию), затем создаёт кампанию и оба потока
+в Keitaro, затем сохраняет локально. Если любой шаг не удался, созданные потоки удаляются, а кампания
+архивируется (или отключается как запасной вариант); если и это не удалось, оставшиеся ID логируются как `ORPHANED`.
+Если Keitaro разрывает соединение, не ответив на вызов создания, кампания ищется по
+своему уникальному alias и тоже откатывается.
 
-## Editor rules (from TZ video)
+## Правила редактора (из видео к ТЗ)
 
-- Fetch streams; streams without offers are shown as plain streams.
-- Add offer → equal shares among active offers; stream marked unpublished (yellow).
-- Remove → offer goes to local archive at 0% (gray) with Bring back.
-- Push → write offers/shares to Keitaro (always integers summing to exactly 100); Cancel → discard draft vs Keitaro.
-- Pin keeps a fixed share while others redistribute to 100%.
+- Загрузка потоков; потоки без офферов отображаются как обычные потоки.
+- Добавление оффера → равные доли между активными офферами; поток помечается как неопубликованный (жёлтый).
+- Удаление → оффер уходит в локальный архив с 0% (серый) с кнопкой «Вернуть».
+- Публикация → запись офферов/долей в Keitaro (всегда целые числа с суммой ровно 100); «Отменить» → отбросить черновик относительно Keitaro.
+- Закрепление фиксирует долю, пока остальные перераспределяются до 100%.
 
-### Fetch / draft semantics
+### Семантика загрузки / черновика
 
-A stream has a **real draft** when the user edited it locally (`is_dirty`, set only by add / remove /
-bring back / pin) **and** its active offers or integer shares differ from Keitaro. On *Fetch streams*:
+У потока есть **настоящий черновик**, когда пользователь изменил его локально (`is_dirty`, выставляется только при
+добавлении / удалении / возврате / закреплении) **и** его активные офферы или целые доли отличаются от Keitaro. При *Загрузить потоки*:
 
-- Streams with a real draft keep their local offers untouched (still `is_dirty=true`).
-- All other streams mirror Keitaro: shares are synced, offers gone from Keitaro become `removed`
-  (0%, can be brought back), new remote offers are added, and `is_dirty` is `false`.
-- Streams deleted in Keitaro are deleted locally (including any draft on them).
+- Потоки с настоящим черновиком сохраняют свои локальные офферы нетронутыми (по-прежнему `is_dirty=true`).
+- Все остальные потоки зеркалируют Keitaro: доли синхронизируются, офферы, исчезнувшие из Keitaro, становятся `removed`
+  (0%, можно вернуть), новые удалённые офферы добавляются, а `is_dirty` становится `false`.
+- Потоки, удалённые в Keitaro, удаляются и локально (включая любой черновик на них).

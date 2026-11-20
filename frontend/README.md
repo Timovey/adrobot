@@ -1,12 +1,12 @@
 # Adrobot frontend (Vue 3 + TypeScript + Vite)
 
-SPA for campaign creator & stream offer editor. API calls go to `/api/*` (proxied to FastAPI in dev).
+SPA для создания кампаний и редактирования офферов в потоках. Вызовы API идут на `/api/*` (в режиме разработки проксируются в FastAPI).
 
-## Requirements
+## Требования
 
-Node.js 20.19+ or 22.12+ (Vite 8). Run the commands below from `frontend/`.
+Node.js 20.19+ или 22.12+ (Vite 8). Команды ниже запускайте из `frontend/`.
 
-## Scripts
+## Скрипты
 
 ```bash
 npm install
@@ -15,17 +15,17 @@ npm run typecheck  # vue-tsc --build (strict)
 npm run build      # typecheck + vite build → dist/ (served by FastAPI at /)
 ```
 
-## Layout
+## Структура
 
-- `src/types.ts` — request/response types mirroring `app/schemas.py`.
-- `src/api.ts` — typed endpoint wrappers, error formatting (`ApiError` with FastAPI `detail`),
-  optional auth token (`Authorization: Bearer <token>` from the Settings input / localStorage,
-  or `VITE_ADROBOT_API_TOKEN` at build time).
+- `src/types.ts` — типы запросов/ответов, повторяющие `app/schemas.py`.
+- `src/api.ts` — типизированные обёртки над endpoint, форматирование ошибок (`ApiError` с FastAPI `detail`),
+  необязательный auth token (`Authorization: Bearer <token>` из поля Настройки / localStorage
+  или `VITE_ADROBOT_API_TOKEN` при сборке).
 
-In dev, start the backend first (`uvicorn app.main:app --reload --host 127.0.0.1 --port 8000` from the
-repo root); the proxy target is configured in `vite.config.ts`. Without `npm run build`, FastAPI
-returns 503 on `/` (use the Vite dev server instead). After the first build, restart uvicorn so `/assets` is mounted.
-If the backend sets `ADROBOT_API_TOKEN`, enter it under **Settings** in the header (or set
-`VITE_ADROBOT_API_TOKEN` in `.env.local` and rebuild).
+В режиме разработки сначала запустите бэкенд (`uvicorn app.main:app --reload --host 127.0.0.1 --port 8000` из
+корня репозитория); адрес прокси настраивается в `vite.config.ts`. Без `npm run build` FastAPI
+возвращает 503 на `/` (используйте вместо этого dev-сервер Vite). После первой сборки перезапустите uvicorn, чтобы смонтировался `/assets`.
+Если бэкенд задаёт `ADROBOT_API_TOKEN`, введите его в **Настройки** в шапке (или задайте
+`VITE_ADROBOT_API_TOKEN` в `.env.local` и пересоберите).
 
-See the repo root `README.md` for full backend + frontend run instructions.
+Полные инструкции по запуску бэкенда и фронтенда смотрите в `README.md` в корне репозитория.
